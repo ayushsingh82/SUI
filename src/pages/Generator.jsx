@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
+import { motion } from 'framer-motion'
 
-const Hero = () => {
+const Generator = () => {
   const [prompt, setPrompt] = useState('')
   const [generatedCode, setGeneratedCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -16,7 +17,12 @@ const Hero = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-gray-900 to-gray-800 text-white"
+    >
       <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <h1 className="text-5xl md:text-7xl font-bold mb-8">
@@ -47,7 +53,11 @@ const Hero = () => {
           </form>
 
           {generatedCode && (
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gray-800 rounded-lg p-6 border border-gray-700"
+            >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold text-blue-400">Generated Code</h3>
                 <button
@@ -60,12 +70,12 @@ const Hero = () => {
               <pre className="bg-gray-900 p-4 rounded-lg overflow-x-auto">
                 <code className="text-gray-300">{generatedCode}</code>
               </pre>
-            </div>
+            </motion.div>
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
-export default Hero 
+export default Generator 

@@ -1,15 +1,22 @@
 import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
-import Hero from './components/Hero'
+import Landing from './pages/Landing'
+import Generator from './pages/Generator'
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar />
-      <main className="pt-16">
-        <Hero />
-      </main>
-    </div>
+    <Router>
+      <div className="min-h-screen bg-gray-900">
+        <Navbar />
+        <main className="pt-16">
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/generator" element={<Generator />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   )
 }
 

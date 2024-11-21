@@ -1,16 +1,15 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 const Navbar = () => {
   return (
-    <nav className="w-full fixed top-0 bg-white shadow-md">
+    <nav className="w-full fixed top-0 bg-gray-900 text-white shadow-lg z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          <div className="text-2xl font-bold">Logo</div>
+          <Link to="/" className="text-2xl font-bold text-blue-400">SuiAI Code</Link>
           <div className="hidden md:flex space-x-6">
-            <a href="#" className="hover:text-blue-600">Home</a>
-            <a href="#" className="hover:text-blue-600">About</a>
-            <a href="#" className="hover:text-blue-600">Services</a>
-            <a href="#" className="hover:text-blue-600">Contact</a>
+            <Link to="/generator" className="hover:text-blue-400 font-medium">AI Code Generator</Link>
+            <a href="https://sui.io/" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 font-medium">Sui Docs</a>
           </div>
         </div>
       </div>
