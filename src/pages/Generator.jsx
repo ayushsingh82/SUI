@@ -1,11 +1,14 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
+import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline'
 
 const Generator = () => {
   const [contractName, setContractName] = useState('')
   const [prompt, setPrompt] = useState('')
   const [generatedCode, setGeneratedCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
+  const [isDeploying, setIsDeploying] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -19,6 +22,25 @@ const Generator = () => {
       setGeneratedCode(`// Generated Sui Move contract: ${contractName}\nmodule example::${contractName.toLowerCase()} {\n    use sui::object::{Self, UID};\n    use sui::transfer;\n    use sui::tx_context::{Self, TxContext};\n\n    struct ${contractName} has key {\n        id: UID,\n        value: u64\n    }\n\n    public fun create(ctx: &mut TxContext) {\n        let counter = ${contractName} {\n            id: object::new(ctx),\n            value: 0\n        };\n        transfer::share_object(counter)\n    }\n}`)
       setIsLoading(false)
     }, 1500)
+  }
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedCode)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000) // Reset copy status after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  const handleDeploy = async () => {
+    setIsDeploying(true)
+    // Simulate deployment
+    setTimeout(() => {
+      alert('Deployment functionality will be implemented here')
+      setIsDeploying(false)
+    }, 2000)
   }
 
   return (
@@ -41,7 +63,6 @@ const Generator = () => {
         <div className="max-w-4xl mx-auto">
           <form onSubmit={handleSubmit} className="mb-8">
             <div className="flex flex-col gap-6">
-              {/* Contract Name Input */}
               <div className="flex flex-col gap-2">
                 <label htmlFor="contractName" className="text-lg font-medium text-gray-300">
                   Contract Name
@@ -57,7 +78,6 @@ const Generator = () => {
                 />
               </div>
 
-              {/* Contract Description Input */}
               <div className="flex flex-col gap-2">
                 <label htmlFor="description" className="text-lg font-medium text-gray-300">
                   Contract Description
@@ -91,15 +111,46 @@ const Generator = () => {
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold text-blue-400">Generated Code</h3>
                 <button
-                  onClick={() => navigator.clipboard.writeText(generatedCode)}
-                  className="px-4 py-2 text-sm bg-gray-700 rounded hover:bg-gray-600 transition-all"
+                  onClick={handleCopy}
+                  className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-700 rounded hover:bg-gray-600 transition-all"
                 >
-                  Copy Code
+                  {isCopied ? (
+                    <>
+                      <ClipboardDocumentCheckIcon className="w-5 h-5 text-green-400" />
+                      <span className="text-green-400">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardDocumentIcon className="w-5 h-5" />
+                      <span>Copy Code</span>
+                    </>
+                  )}
                 </button>
               </div>
               <pre className="bg-gray-900 p-4 rounded-lg overflow-x-auto">
                 <code className="text-gray-300">{generatedCode}</code>
               </pre>
+              
+              {/* Deploy Button */}
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={handleDeploy}
+                  disabled={isDeploying}
+                  className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-all disabled:opacity-50"
+                >
+                  {isDeploying ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Deploying...
+                    </>
+                  ) : (
+                    'Deploy Contract'
+                  )}
+                </button>
+              </div>
             </motion.div>
           )}
         </div>
