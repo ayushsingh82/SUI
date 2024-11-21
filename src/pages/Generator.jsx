@@ -2,16 +2,21 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 
 const Generator = () => {
+  const [contractName, setContractName] = useState('')
   const [prompt, setPrompt] = useState('')
   const [generatedCode, setGeneratedCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!contractName.trim()) {
+      alert('Please enter a contract name')
+      return
+    }
     setIsLoading(true)
     // Simulate API call
     setTimeout(() => {
-      setGeneratedCode('// Example Sui Move code\nmodule example::counter {\n    use sui::object::{Self, UID};\n    use sui::transfer;\n    use sui::tx_context::{Self, TxContext};\n\n    struct Counter has key {\n        id: UID,\n        value: u64\n    }\n\n    public fun create(ctx: &mut TxContext) {\n        let counter = Counter {\n            id: object::new(ctx),\n            value: 0\n        };\n        transfer::share_object(counter)\n    }\n}')
+      setGeneratedCode(`// Generated Sui Move contract: ${contractName}\nmodule example::${contractName.toLowerCase()} {\n    use sui::object::{Self, UID};\n    use sui::transfer;\n    use sui::tx_context::{Self, TxContext};\n\n    struct ${contractName} has key {\n        id: UID,\n        value: u64\n    }\n\n    public fun create(ctx: &mut TxContext) {\n        let counter = ${contractName} {\n            id: object::new(ctx),\n            value: 0\n        };\n        transfer::share_object(counter)\n    }\n}`)
       setIsLoading(false)
     }, 1500)
   }
@@ -35,13 +40,38 @@ const Generator = () => {
 
         <div className="max-w-4xl mx-auto">
           <form onSubmit={handleSubmit} className="mb-8">
-            <div className="flex flex-col gap-4">
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                className="w-full h-32 p-4 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                placeholder="Describe the smart contract or functionality you want to create..."
-              />
+            <div className="flex flex-col gap-6">
+              {/* Contract Name Input */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="contractName" className="text-lg font-medium text-gray-300">
+                  Contract Name
+                </label>
+                <input
+                  id="contractName"
+                  type="text"
+                  value={contractName}
+                  onChange={(e) => setContractName(e.target.value)}
+                  className="w-full p-4 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                  placeholder="Enter contract name (e.g., TokenSwap, NFTMarket)"
+                  required
+                />
+              </div>
+
+              {/* Contract Description Input */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="description" className="text-lg font-medium text-gray-300">
+                  Contract Description
+                </label>
+                <textarea
+                  id="description"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  className="w-full h-32 p-4 rounded-lg bg-gray-800 border border-gray-700 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                  placeholder="Describe the functionality of your smart contract (e.g., A token swap contract that allows users to exchange SUI for custom tokens)"
+                  required
+                />
+              </div>
+
               <button
                 type="submit"
                 disabled={isLoading}
