@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Landing from './pages/Landing'
 import Generator from './pages/Generator'
+import Audit from './pages/Audit'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/generator" element={<Generator />} />
+            <Route path="/audit" element={<Audit />} />
           </Routes>
         </main>
       </div>

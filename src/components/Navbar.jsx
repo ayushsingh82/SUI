@@ -53,6 +53,22 @@ const Navbar = () => {
                 />
               )}
             </Link>
+            <Link 
+              to="/audit" 
+              className={`relative group ${
+                location.pathname === '/audit' ? 'text-blue-400' : 'text-gray-300'
+              }`}
+            >
+              <span className="font-medium hover:text-blue-400 transition-colors">
+                Code Audit
+              </span>
+              {location.pathname === '/audit' && (
+                <motion.div 
+                  layoutId="underline"
+                  className="absolute left-0 right-0 h-0.5 bg-blue-400 bottom-[-4px]"
+                />
+              )}
+            </Link>
             <a 
               href="https://sui.io/" 
               target="_blank" 
