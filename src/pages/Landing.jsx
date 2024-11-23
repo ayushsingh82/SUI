@@ -2,13 +2,13 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { CodeBracketIcon, CpuChipIcon, RocketLaunchIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
+import SuiLogo from '../components/SuiLogo'
 
 const Landing = () => {
   const navigate = useNavigate()
   const { scrollY } = useScroll()
   const y1 = useTransform(scrollY, [0, 300], [0, 100])
   const y2 = useTransform(scrollY, [0, 300], [0, -100])
-  const opacity = useTransform(scrollY, [0, 300], [1, 0])
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -25,34 +25,9 @@ const Landing = () => {
     visible: { opacity: 1, y: 0 }
   }
 
-  // Floating animation variants
-  const floatingVariants = {
-    animate: {
-      y: [0, -20, 0],
-      transition: {
-        duration: 4,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  }
-
-  const glowVariants = {
-    initial: { opacity: 0.5, scale: 1 },
-    animate: {
-      opacity: [0.5, 1, 0.5],
-      scale: [1, 1.2, 1],
-      transition: {
-        duration: 3,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  }
-
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden relative">
-      {/* Enhanced Background Elements */}
+      {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           animate={{
@@ -74,28 +49,7 @@ const Landing = () => {
         </motion.div>
       </div>
 
-      {/* Floating Particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            initial={{ y: Math.random() * 100, x: Math.random() * window.innerWidth }}
-            animate={{
-              y: [-20, window.innerHeight + 20],
-              x: Math.random() * window.innerWidth
-            }}
-            transition={{
-              duration: 10 + Math.random() * 10,
-              repeat: Infinity,
-              ease: "linear",
-              delay: Math.random() * 5
-            }}
-            className="absolute w-1 h-1 bg-blue-400/30 rounded-full"
-          />
-        ))}
-      </div>
-
-      {/* Hero Section with Enhanced Typography */}
+      {/* Hero Section */}
       <div className="container mx-auto px-4 py-20 relative">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <motion.div
@@ -104,75 +58,85 @@ const Landing = () => {
             transition={{ duration: 0.6 }}
             className="relative"
           >
-            {/* Glowing Effect Behind Title */}
             <motion.div
-              variants={glowVariants}
-              initial="initial"
-              animate="animate"
-              className="absolute -left-4 -top-4 w-20 h-20 bg-blue-500/10 rounded-full blur-xl"
-            />
+              className="absolute -top-20 -left-20 w-32 h-32 opacity-20"
+              animate={{
+                rotate: [0, 360],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            >
+              <SuiLogo className="w-full h-full" />
+            </motion.div>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 relative tracking-tight">
-              <span className="inline-block transform hover:scale-105 transition-transform duration-300">
-                Build
-              </span>{" "}
-              <span className="inline-block transform hover:scale-105 transition-transform duration-300">
-                on{" "}
-              </span>
-              <span className="relative inline-block">
-                <span className="text-blue-400 transform hover:scale-105 transition-transform duration-300">Sui</span>
-                <motion.span
-                  className="absolute -bottom-2 left-0 w-full h-0.5 bg-blue-400"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                />
-              </span>{" "}
-              <span className="inline-block transform hover:scale-105 transition-transform duration-300">
-                with
-              </span>{" "}
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 relative">
               <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-                className="relative inline-block"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="inline-block"
               >
-                <span className="text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-blue-400 transform hover:scale-105 transition-transform duration-300">
-                  AI
-                </span>
+                Build on{" "}
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-blue-400 relative inline-block"
+              >
+                Sui
                 <motion.div
                   className="absolute -inset-2 bg-blue-500/20 rounded-lg blur-lg"
-                  variants={glowVariants}
-                  initial="initial"
-                  animate="animate"
+                  animate={{
+                    opacity: [0.5, 1, 0.5],
+                    scale: [1, 1.2, 1]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
                 />
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="inline-block"
+              >
+                {" "}with{" "}
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8 }}
+                className="text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-blue-400"
+              >
+                AI
               </motion.span>
             </h1>
 
-            {/* Enhanced Description */}
             <motion.p 
               className="text-xl text-gray-300 mb-8 leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
+              transition={{ delay: 1 }}
             >
-              <span className="text-blue-400 font-semibold">Transform</span> your blockchain ideas into{" "}
-              <span className="text-purple-400 font-semibold">production-ready</span> Sui Move code using our{" "}
-              <span className="text-blue-400 font-semibold">advanced AI</span> code generator.
-              Build smart contracts{" "}
-              <span className="relative inline-block group">
-                <span className="text-blue-400 font-semibold">faster</span>
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-400 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-              </span>{" "}
-              and more{" "}
-              <span className="relative inline-block group">
-                <span className="text-purple-400 font-semibold">efficiently</span>
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-purple-400 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-              </span>{" "}
-              than ever before.
+              Transform your blockchain ideas into{" "}
+              <span className="text-blue-400 font-semibold">production-ready</span> Sui Move code using our{" "}
+              <span className="text-purple-400 font-semibold">advanced AI</span> code generator.
             </motion.p>
 
-            <div className="flex gap-4 flex-wrap">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2 }}
+              className="flex gap-4 flex-wrap"
+            >
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -191,7 +155,7 @@ const Landing = () => {
               >
                 Learn More
               </motion.a>
-            </div>
+            </motion.div>
           </motion.div>
           
           <motion.div
@@ -201,21 +165,28 @@ const Landing = () => {
             className="hidden md:block relative"
           >
             <motion.div
-              variants={floatingVariants}
-              animate="animate"
-              className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg"
-            >
-              <span className="text-4xl font-bold text-white">Sui</span>
-            </motion.div>
-            <motion.div
+              className="absolute -top-10 -right-10 w-32 h-32"
               animate={{
                 y: [-10, 10, -10],
-                transition: {
+                rotate: [0, 360]
+              }}
+              transition={{
+                y: {
                   duration: 4,
                   repeat: Infinity,
                   ease: "easeInOut"
+                },
+                rotate: {
+                  duration: 20,
+                  repeat: Infinity,
+                  ease: "linear"
                 }
               }}
+            >
+              <SuiLogo className="w-full h-full" />
+            </motion.div>
+            <motion.div
+              style={{ y: y1 }}
               className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-6 border border-gray-700 shadow-xl backdrop-blur-sm"
             >
               <pre className="bg-gray-900/80 p-4 rounded-lg overflow-x-auto">
@@ -237,6 +208,31 @@ const Landing = () => {
             </motion.div>
           </motion.div>
         </div>
+
+        {/* Stats Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 text-center"
+        >
+          {[
+            { label: "Smart Contracts", value: "1000+" },
+            { label: "Security Score", value: "98%" },
+            { label: "Active Users", value: "50K+" },
+            { label: "Code Generated", value: "1M+" }
+          ].map((stat, index) => (
+            <motion.div
+              key={index}
+              whileHover={{ scale: 1.05 }}
+              className="bg-gray-800/50 p-6 rounded-lg backdrop-blur-sm"
+            >
+              <h3 className="text-3xl font-bold text-blue-400 mb-2">{stat.value}</h3>
+              <p className="text-gray-400">{stat.label}</p>
+            </motion.div>
+          ))}
+        </motion.div>
 
         {/* Features Section */}
         <motion.div

@@ -7,6 +7,95 @@ const Audit = () => {
   const [auditResults, setAuditResults] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  const analyzeCode = (code) => {
+    // Basic analysis of common Sui Move vulnerabilities
+    const results = {
+      vulnerabilities: [],
+      score: 10,
+      suggestions: []
+    }
+
+    // Check for basic security patterns
+    if (!code.includes('public entry fun')) {
+      results.vulnerabilities.push({
+        severity: 'Low',
+        title: 'Missing Entry Functions',
+        description: 'No public entry functions found. Consider if the contract needs external interaction points.',
+        location: 'Global',
+        recommendation: 'Add public entry functions if the contract needs to be called externally.'
+      })
+      results.score -= 0.5
+    }
+
+    if (code.includes('assert!')) {
+      results.suggestions.push('Consider using custom errors instead of assert! for better error handling')
+    }
+
+    // Check for access control
+    if (!code.includes('transfer::transfer') && !code.includes('transfer::share_object')) {
+      results.vulnerabilities.push({
+        severity: 'High',
+        title: 'Missing Object Transfer',
+        description: 'No object transfer functions found. Objects might be stuck in the contract.',
+        location: 'Global',
+        recommendation: 'Implement proper object transfer mechanisms using transfer::transfer or transfer::share_object.'
+      })
+      results.score -= 2
+    }
+
+    // Check for initialization
+    if (code.includes('struct') && !code.includes('new')) {
+      results.vulnerabilities.push({
+        severity: 'Medium',
+        title: 'Missing Initialization',
+        description: 'Struct defined but no initialization function found.',
+        location: 'Struct definition',
+        recommendation: 'Add initialization function using object::new().'
+      })
+      results.score -= 1.5
+    }
+
+    // Check for proper module structure
+    if (!code.includes('module') || !code.includes('use sui::')) {
+      results.vulnerabilities.push({
+        severity: 'High',
+        title: 'Invalid Module Structure',
+        description: 'Module declaration or essential Sui imports missing.',
+        location: 'Module declaration',
+        recommendation: 'Ensure proper module declaration and import necessary Sui packages.'
+      })
+      results.score -= 2
+    }
+
+    // Check for proper type usage
+    if (code.includes('vector') && !code.includes('vector::')) {
+      results.suggestions.push('Consider using vector module functions for vector operations')
+    }
+
+    // Add general suggestions
+    results.suggestions.push(
+      'Consider adding events for important state changes',
+      'Add comprehensive test coverage',
+      'Document complex functions with comments'
+    )
+
+    // Check for potential integer overflow
+    if (code.includes('+') || code.includes('*')) {
+      results.vulnerabilities.push({
+        severity: 'Medium',
+        title: 'Potential Integer Overflow',
+        description: 'Arithmetic operations detected without overflow checks.',
+        location: 'Arithmetic operations',
+        recommendation: 'Implement checks for arithmetic operations or use safe math operations.'
+      })
+      results.score -= 1
+    }
+
+    // Normalize score
+    results.score = Math.max(0, Math.min(10, results.score))
+    return results
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!code.trim()) {
@@ -14,34 +103,13 @@ const Audit = () => {
       return
     }
     setIsLoading(true)
-    // Simulate API call
+    
+    // Simulate API delay
     setTimeout(() => {
-      setAuditResults({
-        vulnerabilities: [
-          {
-            severity: 'High',
-            title: 'Unauthorized Access',
-            description: 'The contract lacks proper access controls for administrative functions.',
-            location: 'Line 15-20',
-            recommendation: 'Implement proper access control modifiers or checks.'
-          },
-          {
-            severity: 'Medium',
-            title: 'Integer Overflow',
-            description: 'Potential integer overflow in arithmetic operations.',
-            location: 'Line 25',
-            recommendation: 'Use safe math operations or implement proper bounds checking.'
-          }
-        ],
-        score: 7.5,
-        suggestions: [
-          'Consider implementing event emissions for important state changes',
-          'Add input validation for critical parameters',
-          'Consider adding emergency pause functionality'
-        ]
-      })
+      const results = analyzeCode(code)
+      setAuditResults(results)
       setIsLoading(false)
-    }, 2000)
+    }, 1500)
   }
 
   const getSeverityColor = (severity) => {
