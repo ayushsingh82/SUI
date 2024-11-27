@@ -81,7 +81,7 @@ const Navbar = () => {
               <span className="absolute left-0 right-0 h-0.5 bg-blue-400 bottom-[-4px] transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
             </a>
             <a 
-              href="https://github.com/MystenLabs/sui" 
+              href="https://github.com/ayushsingh82/SUI" 
               target="_blank" 
               rel="noopener noreferrer"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"

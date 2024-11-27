@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline'
+import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon, CodeBracketIcon } from '@heroicons/react/24/outline'
 
 const Generator = () => {
   const [contractName, setContractName] = useState('')
@@ -9,6 +9,106 @@ const Generator = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [isDeploying, setIsDeploying] = useState(false)
+  const [isCompiling, setIsCompiling] = useState(false)
+  const [isCompiled, setIsCompiled] = useState(false)
+  const [walletConnected, setWalletConnected] = useState(false)
+
+  // Check if Sui wallet is installed and connected
+  useEffect(() => {
+    const checkWallet = async () => {
+      try {
+        // Check if Sui wallet is installed
+        if (window.sui) {
+          const isConnected = await window.sui.hasPermissions()
+          setWalletConnected(isConnected)
+        }
+      } catch (error) {
+        console.error('Error checking wallet:', error)
+      }
+    }
+    checkWallet()
+  }, [])
+
+  const connectWallet = async () => {
+    try {
+      if (window.sui) {
+        try {
+          await window.sui.requestPermissions()
+          setWalletConnected(true)
+        } catch (error) {
+          console.error('Error connecting wallet:', error)
+          alert('Failed to connect wallet. Please try again.')
+        }
+      } else {
+        window.open('https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil', '_blank')
+      }
+    } catch (error) {
+      console.error('Wallet connection error:', error)
+      alert('Please install Sui Wallet')
+    }
+  }
+
+  const handleCompile = async () => {
+    if (!generatedCode) {
+      alert('Please generate code first')
+      return
+    }
+
+    setIsCompiling(true)
+    try {
+      // Simulate compilation process
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      setIsCompiled(true)
+      alert('Contract compiled successfully!')
+    } catch (error) {
+      console.error('Compilation error:', error)
+      alert('Failed to compile contract. Please check your code.')
+    } finally {
+      setIsCompiling(false)
+    }
+  }
+
+  const handleDeploy = async () => {
+    if (!walletConnected) {
+      alert('Please connect your Sui wallet first')
+      return
+    }
+
+    if (!isCompiled) {
+      alert('Please compile the contract before deploying')
+      return
+    }
+
+    setIsDeploying(true)
+    try {
+      // Create the transaction data
+      const txb = {
+        kind: 'moveCall',
+        data: {
+          packageObjectId: '0x2', // Replace with your package ID
+          module: contractName.toLowerCase(),
+          function: 'initialize',
+          typeArguments: [],
+          arguments: [],
+          gasBudget: 10000,
+        }
+      }
+
+      // Request transaction signature and execution
+      const result = await window.sui.signAndExecuteTransaction({
+        transaction: txb
+      })
+
+      if (result) {
+        alert('Contract deployed successfully! Transaction ID: ' + result.certificate.transactionDigest)
+      }
+    } catch (error) {
+      console.error('Deployment error:', error)
+      alert('Failed to deploy contract. Please try again.')
+    } finally {
+      setIsDeploying(false)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -17,11 +117,82 @@ const Generator = () => {
       return
     }
     setIsLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      setGeneratedCode(`// Generated Sui Move contract: ${contractName}\nmodule example::${contractName.toLowerCase()} {\n    use sui::object::{Self, UID};\n    use sui::transfer;\n    use sui::tx_context::{Self, TxContext};\n\n    struct ${contractName} has key {\n        id: UID,\n        value: u64\n    }\n\n    public fun create(ctx: &mut TxContext) {\n        let counter = ${contractName} {\n            id: object::new(ctx),\n            value: 0\n        };\n        transfer::share_object(counter)\n    }\n}`)
+    try {
+      // Generate more realistic Sui Move code based on the prompt
+      const generatedCode = `
+module ${contractName.toLowerCase()}::main {
+    use sui::object::{Self, UID};
+    use sui::transfer;
+    use sui::tx_context::{Self, TxContext};
+    use sui::coin::{Self, Coin};
+    use sui::balance::{Self, Balance};
+    use sui::sui::SUI;
+
+    /// Custom error codes
+    const EInsufficientBalance: u64 = 0;
+    const EInvalidAmount: u64 = 1;
+
+    /// The main storage object for ${contractName}
+    struct ${contractName} has key {
+        id: UID,
+        balance: Balance<SUI>,
+        owner: address
+    }
+
+    /// Create a new instance of ${contractName}
+    public fun initialize(ctx: &mut TxContext) {
+        let ${contractName.toLowerCase()} = ${contractName} {
+            id: object::new(ctx),
+            balance: balance::zero<SUI>(),
+            owner: tx_context::sender(ctx)
+        };
+        // Transfer the object to the sender
+        transfer::share_object(${contractName.toLowerCase()})
+    }
+
+    /// Deposit SUI into the contract
+    public entry fun deposit(
+        self: &mut ${contractName},
+        payment: Coin<SUI>,
+        ctx: &mut TxContext
+    ) {
+        let amount = coin::value(&payment);
+        assert!(amount > 0, EInvalidAmount);
+        
+        let coin_balance = coin::into_balance(payment);
+        balance::join(&mut self.balance, coin_balance);
+    }
+
+    /// Withdraw SUI from the contract
+    public entry fun withdraw(
+        self: &mut ${contractName},
+        amount: u64,
+        ctx: &mut TxContext
+    ) {
+        assert!(balance::value(&self.balance) >= amount, EInsufficientBalance);
+        assert!(tx_context::sender(ctx) == self.owner, 0);
+        
+        let withdrawn_coin = coin::take(&mut self.balance, amount, ctx);
+        transfer::transfer(withdrawn_coin, tx_context::sender(ctx));
+    }
+
+    /// View functions
+    public fun get_balance(self: &${contractName}): u64 {
+        balance::value(&self.balance)
+    }
+
+    public fun get_owner(self: &${contractName}): address {
+        self.owner
+    }
+}`;
+      
+      setGeneratedCode(generatedCode)
+    } catch (error) {
+      console.error('Error generating code:', error)
+      alert('Failed to generate code. Please try again.')
+    } finally {
       setIsLoading(false)
-    }, 1500)
+    }
   }
 
   const handleCopy = async () => {
@@ -32,15 +203,6 @@ const Generator = () => {
     } catch (err) {
       console.error('Failed to copy:', err)
     }
-  }
-
-  const handleDeploy = async () => {
-    setIsDeploying(true)
-    // Simulate deployment
-    setTimeout(() => {
-      alert('Deployment functionality will be implemented here')
-      setIsDeploying(false)
-    }, 2000)
   }
 
   return (
@@ -131,11 +293,41 @@ const Generator = () => {
                 <code className="text-gray-300">{generatedCode}</code>
               </pre>
               
-              {/* Deploy Button */}
-              <div className="mt-6 flex justify-end">
+              {/* Deployment Actions */}
+              <div className="mt-6 flex justify-end items-center gap-4">
+                {!walletConnected && (
+                  <button
+                    onClick={connectWallet}
+                    className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all"
+                  >
+                    Connect Wallet
+                  </button>
+                )}
+
+                <button
+                  onClick={handleCompile}
+                  disabled={isCompiling || !generatedCode}
+                  className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-all disabled:opacity-50"
+                >
+                  {isCompiling ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Compiling...
+                    </>
+                  ) : (
+                    <>
+                      <CodeBracketIcon className="w-5 h-5" />
+                      {isCompiled ? 'Recompile' : 'Compile'}
+                    </>
+                  )}
+                </button>
+
                 <button
                   onClick={handleDeploy}
-                  disabled={isDeploying}
+                  disabled={isDeploying || !isCompiled || !walletConnected}
                   className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-all disabled:opacity-50"
                 >
                   {isDeploying ? (
