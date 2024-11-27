@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon, CodeBracketIcon } from '@heroicons/react/24/outline'
+import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon, CodeBracketIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 
 const Generator = () => {
   const [contractName, setContractName] = useState('')
@@ -12,45 +12,80 @@ const Generator = () => {
   const [isCompiling, setIsCompiling] = useState(false)
   const [isCompiled, setIsCompiled] = useState(false)
   const [walletConnected, setWalletConnected] = useState(false)
+  const [showPopup, setShowPopup] = useState(false)
+  const [popupMessage, setPopupMessage] = useState({ type: '', message: '' })
 
   // Check if Sui wallet is installed and connected
   useEffect(() => {
     const checkWallet = async () => {
       try {
-        // Check if Sui wallet is installed
-        if (window.sui) {
-          const isConnected = await window.sui.hasPermissions()
-          setWalletConnected(isConnected)
+        // Check if Sui wallet is installed using the correct window property
+        if (window?.ethereum?.isSui) {
+          const permissions = await window.ethereum.request({
+            method: 'wallet_getPermissions'
+          });
+          setWalletConnected(permissions.length > 0);
         }
       } catch (error) {
-        console.error('Error checking wallet:', error)
+        console.error('Error checking wallet:', error);
       }
-    }
-    checkWallet()
-  }, [])
+    };
+    checkWallet();
+  }, []);
 
   const connectWallet = async () => {
     try {
-      if (window.sui) {
-        try {
-          await window.sui.requestPermissions()
-          setWalletConnected(true)
-        } catch (error) {
-          console.error('Error connecting wallet:', error)
-          alert('Failed to connect wallet. Please try again.')
+      if (!window?.ethereum?.isSui) {
+        alert('Sui Wallet not detected. Please install Sui Wallet extension.');
+        return;
+      }
+
+      try {
+        // Request account access
+        const accounts = await window.ethereum.request({
+          method: 'eth_requestAccounts'
+        });
+        
+        if (accounts.length > 0) {
+          setWalletConnected(true);
+          console.log('Connected account:', accounts[0]);
+          
+          // Show success popup
+          setPopupMessage({
+            type: 'success',
+            message: 'Wallet connected successfully!'
+          });
+          setShowPopup(true);
+          setTimeout(() => setShowPopup(false), 3000);
         }
-      } else {
-        window.open('https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil', '_blank')
+      } catch (error) {
+        console.error('Error connecting wallet:', error);
+        setPopupMessage({
+          type: 'error',
+          message: 'Failed to connect wallet. Please try again.'
+        });
+        setShowPopup(true);
+        setTimeout(() => setShowPopup(false), 3000);
       }
     } catch (error) {
-      console.error('Wallet connection error:', error)
-      alert('Please install Sui Wallet')
+      console.error('Wallet connection error:', error);
+      setPopupMessage({
+        type: 'error',
+        message: 'Error connecting to Sui Wallet'
+      });
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000);
     }
-  }
+  };
 
   const handleCompile = async () => {
     if (!generatedCode) {
-      alert('Please generate code first')
+      setPopupMessage({
+        type: 'error',
+        message: 'Please generate code first'
+      })
+      setShowPopup(true)
+      setTimeout(() => setShowPopup(false), 3000)
       return
     }
 
@@ -59,10 +94,20 @@ const Generator = () => {
       // Simulate compilation process
       await new Promise(resolve => setTimeout(resolve, 2000))
       setIsCompiled(true)
-      alert('Contract compiled successfully!')
+      setPopupMessage({
+        type: 'success',
+        message: 'Contract compiled successfully! Ready for deployment.'
+      })
+      setShowPopup(true)
+      setTimeout(() => setShowPopup(false), 3000)
     } catch (error) {
       console.error('Compilation error:', error)
-      alert('Failed to compile contract. Please check your code.')
+      setPopupMessage({
+        type: 'error',
+        message: 'Failed to compile contract. Please check your code.'
+      })
+      setShowPopup(true)
+      setTimeout(() => setShowPopup(false), 3000)
     } finally {
       setIsCompiling(false)
     }
@@ -70,45 +115,64 @@ const Generator = () => {
 
   const handleDeploy = async () => {
     if (!walletConnected) {
-      alert('Please connect your Sui wallet first')
-      return
+      setPopupMessage({
+        type: 'error',
+        message: 'Please connect your Sui wallet first'
+      });
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000);
+      return;
     }
 
     if (!isCompiled) {
-      alert('Please compile the contract before deploying')
-      return
+      setPopupMessage({
+        type: 'error',
+        message: 'Please compile the contract before deploying'
+      });
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000);
+      return;
     }
 
-    setIsDeploying(true)
+    setIsDeploying(true);
     try {
-      // Create the transaction data
       const txb = {
         kind: 'moveCall',
         data: {
-          packageObjectId: '0x2', // Replace with your package ID
+          packageObjectId: '0x2',
           module: contractName.toLowerCase(),
           function: 'initialize',
           typeArguments: [],
           arguments: [],
           gasBudget: 10000,
         }
-      }
+      };
 
-      // Request transaction signature and execution
-      const result = await window.sui.signAndExecuteTransaction({
-        transaction: txb
-      })
+      const response = await window.ethereum.request({
+        method: 'sui_signAndExecuteTransaction',
+        params: [txb]
+      });
 
-      if (result) {
-        alert('Contract deployed successfully! Transaction ID: ' + result.certificate.transactionDigest)
+      if (response) {
+        setPopupMessage({
+          type: 'success',
+          message: `Contract deployed successfully! TX: ${response.digest.slice(0, 10)}...`
+        });
+        setShowPopup(true);
+        setTimeout(() => setShowPopup(false), 3000);
       }
     } catch (error) {
-      console.error('Deployment error:', error)
-      alert('Failed to deploy contract. Please try again.')
+      console.error('Deployment error:', error);
+      setPopupMessage({
+        type: 'error',
+        message: 'Failed to deploy contract. Please try again.'
+      });
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000);
     } finally {
-      setIsDeploying(false)
+      setIsDeploying(false);
     }
-  }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -347,6 +411,26 @@ module ${contractName.toLowerCase()}::main {
           )}
         </div>
       </div>
+
+      {showPopup && (
+        <motion.div
+          initial={{ opacity: 0, y: -100 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -100 }}
+          className={`fixed top-20 right-4 p-4 rounded-lg shadow-lg backdrop-blur-lg z-50 flex items-center gap-3 ${
+            popupMessage.type === 'success' 
+              ? 'bg-green-500/10 border border-green-500/50 text-green-500'
+              : 'bg-red-500/10 border border-red-500/50 text-red-500'
+          }`}
+        >
+          {popupMessage.type === 'success' ? (
+            <CheckCircleIcon className="w-6 h-6" />
+          ) : (
+            <XCircleIcon className="w-6 h-6" />
+          )}
+          <p className="font-medium">{popupMessage.message}</p>
+        </motion.div>
+      )}
     </motion.div>
   )
 }

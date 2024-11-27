@@ -2,59 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom animations */
+@layer base {
+  html {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  code, pre {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Your existing animations */
 @keyframes float {
   0% { transform: translateY(0px); }
   50% { transform: translateY(-20px); }
   100% { transform: translateY(0px); }
 }
 
-@keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+/* Add learning platform specific styles */
+.learning-gradient {
+  @apply bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 bg-clip-text text-transparent animate-gradient;
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+.code-block {
+  @apply font-code text-sm leading-relaxed;
 }
 
-.text-gradient {
-  background-size: 200% auto;
-  animation: shine 4s linear infinite;
+.section-title {
+  @apply font-space font-bold text-4xl md:text-5xl mb-6 learning-gradient;
 }
 
-@keyframes shine {
-  to {
-    background-position: 200% center;
-  }
+.section-subtitle {
+  @apply font-outfit text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed;
 }
 
-.hover-underline {
-  position: relative;
-  display: inline-block;
+.feature-card {
+  @apply bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300;
 }
 
-.hover-underline::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 2px;
-  bottom: 0;
-  left: 0;
-  background-color: currentColor;
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.3s ease;
+.nav-link {
+  @apply font-space font-medium hover:text-blue-400 transition-colors;
 }
 
-.hover-underline:hover::after {
-  transform: scaleX(1);
-  transform-origin: left;
+.button-primary {
+  @apply font-space font-medium bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-all duration-300 hover:scale-105;
 }
 
-.text-glow {
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.5),
-               0 0 20px rgba(59, 130, 246, 0.3),
-               0 0 30px rgba(59, 130, 246, 0.2);
+.button-secondary {
+  @apply font-space font-medium border border-blue-400/50 text-blue-400 px-6 py-3 rounded-lg hover:bg-blue-400/10 transition-all duration-300;
 } 

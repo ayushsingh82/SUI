@@ -303,20 +303,7 @@ const Landing = () => {
             transition={{ duration: 0.6 }}
             className="hidden md:block relative"
           >
-            {/* Decorative elements */}
-            <motion.div
-              animate={{
-                scale: [1, 1.2, 1],
-                rotate: [0, -5, 0],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="absolute -right-20 -top-20 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"
-            />
-
+            {/* Floating Sui Logo */}
             <motion.div
               className="absolute -top-10 -right-10 w-32 h-32 z-10"
               animate={{
@@ -339,17 +326,121 @@ const Landing = () => {
               <SuiLogo className="w-full h-full filter drop-shadow-lg" />
             </motion.div>
 
+            {/* Code Preview Card */}
             <motion.div
               style={{ y: y1 }}
-              className="relative bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-6 border border-gray-700/50 shadow-xl backdrop-blur-sm group hover:border-blue-500/50 transition-colors duration-300"
+              className="relative bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-xl p-8 border border-gray-700/50 shadow-2xl backdrop-blur-sm group hover:border-blue-500/50 transition-all duration-500"
             >
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-all duration-500" />
-              <pre className="bg-gray-900/80 p-4 rounded-lg overflow-x-auto relative">
-                <code className="text-gray-300 font-mono">
-                  {/* Your code preview content */}
-                </code>
-              </pre>
+              {/* Glow Effect */}
+              <div className="absolute -inset-[2px] bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500" />
+              
+              {/* Code Editor Header */}
+              <div className="flex items-center justify-between mb-4 relative">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                    <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                  </div>
+                  <span className="text-sm text-gray-400 font-code">smart_contract.move</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 font-code">Sui Move</span>
+                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                </div>
+              </div>
+
+              {/* Code Content */}
+              <div className="relative">
+                <pre className="bg-gray-900/90 p-6 rounded-lg overflow-x-auto font-code text-sm leading-relaxed">
+                  <code className="text-gray-300">
+{`module example::defi {
+    use sui::coin::Coin;
+    use sui::balance::Balance;
+    use sui::tx_context::TxContext;
+
+    /// Smart contract for DeFi operations
+    struct LiquidityPool has key {
+        id: UID,
+        balance: Balance<SUI>,
+        total_supply: u64
+    }
+
+    /// Initialize new pool
+    public fun initialize(ctx: &mut TxContext) {
+        // Create new pool instance
+        let pool = LiquidityPool {
+            id: object::new(ctx),
+            balance: balance::zero(),
+            total_supply: 0
+        };
+        
+        // Share the pool object
+        transfer::share_object(pool)
+    }`}
+                  </code>
+                </pre>
+
+                {/* Line Numbers */}
+                <div className="absolute left-4 top-6 flex flex-col gap-[0.3rem] text-gray-600 font-code text-sm select-none">
+                  {Array.from({ length: 20 }, (_, i) => (
+                    <div key={i} className="text-right">{i + 1}</div>
+                  ))}
+                </div>
+
+                {/* Typing Cursor */}
+                <motion.div
+                  className="absolute right-8 bottom-8 w-2 h-4 bg-blue-400/50"
+                  animate={{
+                    opacity: [1, 0, 1]
+                  }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    ease: "steps(2)"
+                  }}
+                />
+              </div>
+
+              {/* Code Tags */}
+              <div className="flex gap-2 mt-4">
+                <span className="px-2 py-1 rounded-md bg-blue-500/10 text-blue-400 text-xs font-medium">
+                  #sui-move
+                </span>
+                <span className="px-2 py-1 rounded-md bg-purple-500/10 text-purple-400 text-xs font-medium">
+                  #smart-contract
+                </span>
+                <span className="px-2 py-1 rounded-md bg-green-500/10 text-green-400 text-xs font-medium">
+                  #defi
+                </span>
+              </div>
             </motion.div>
+
+            {/* Background Decorative Elements */}
+            <motion.div
+              animate={{
+                scale: [1, 1.2, 1],
+                rotate: [0, -5, 0],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute -right-20 -top-20 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"
+            />
+            <motion.div
+              animate={{
+                scale: [1, 1.2, 1],
+                rotate: [0, 5, 0],
+              }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute -right-10 bottom-20 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl"
+            />
           </motion.div>
         </div>
 
