@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon, CodeBracketIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
+import OpenAI from 'openai';
+import { getContractTemplate } from '../constants/ContractTemplates';
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: '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',
+  baseURL: 'https://api.openai.com/v1',
+  defaultHeaders: {
+    'Authorization': `Bearer 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`
+  },
+  dangerouslyAllowBrowser: true
+});
 
 const Generator = () => {
   const [contractName, setContractName] = useState('')
@@ -19,12 +31,15 @@ const Generator = () => {
   useEffect(() => {
     const checkWallet = async () => {
       try {
-        // Check if Sui wallet is installed using the correct window property
-        if (window?.ethereum?.isSui) {
-          const permissions = await window.ethereum.request({
-            method: 'wallet_getPermissions'
-          });
-          setWalletConnected(permissions.length > 0);
+        // Check if Sui wallet is installed using window.wallet
+        if (window?.wallet) {
+          const wallet = window.wallet;
+          // Check if Sui wallet is connected
+          const isConnected = await wallet.hasPermissions();
+          setWalletConnected(isConnected);
+          console.log("Wallet detected:", wallet);
+        } else {
+          console.log("No wallet detected");
         }
       } catch (error) {
         console.error('Error checking wallet:', error);
@@ -35,22 +50,26 @@ const Generator = () => {
 
   const connectWallet = async () => {
     try {
-      if (!window?.ethereum?.isSui) {
-        alert('Sui Wallet not detected. Please install Sui Wallet extension.');
+      if (!window?.wallet) {
+        setPopupMessage({
+          type: 'error',
+          message: 'Sui Wallet not found! Please install Sui Wallet.'
+        });
+        setShowPopup(true);
+        setTimeout(() => setShowPopup(false), 3000);
         return;
       }
 
       try {
-        // Request account access
-        const accounts = await window.ethereum.request({
-          method: 'eth_requestAccounts'
-        });
+        // Request wallet connection
+        const wallet = window.wallet;
+        await wallet.connect();
         
+        // Get connected accounts
+        const accounts = await wallet.getAccounts();
         if (accounts.length > 0) {
           setWalletConnected(true);
           console.log('Connected account:', accounts[0]);
-          
-          // Show success popup
           setPopupMessage({
             type: 'success',
             message: 'Wallet connected successfully!'
@@ -136,6 +155,7 @@ const Generator = () => {
 
     setIsDeploying(true);
     try {
+      const wallet = window.wallet;
       const txb = {
         kind: 'moveCall',
         data: {
@@ -148,15 +168,15 @@ const Generator = () => {
         }
       };
 
-      const response = await window.ethereum.request({
-        method: 'sui_signAndExecuteTransaction',
-        params: [txb]
+      // Use the wallet to sign and execute the transaction
+      const result = await wallet.signAndExecuteTransaction({
+        transaction: txb
       });
 
-      if (response) {
+      if (result) {
         setPopupMessage({
           type: 'success',
-          message: `Contract deployed successfully! TX: ${response.digest.slice(0, 10)}...`
+          message: `Contract deployed successfully! TX: ${result.digest.slice(0, 10)}...`
         });
         setShowPopup(true);
         setTimeout(() => setShowPopup(false), 3000);
@@ -175,89 +195,46 @@ const Generator = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!contractName.trim()) {
-      alert('Please enter a contract name')
-      return
+      setPopupMessage({
+        type: 'error',
+        message: 'Please enter a contract name'
+      });
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000);
+      return;
     }
-    setIsLoading(true)
+    
+    setIsLoading(true);
     try {
-      // Generate more realistic Sui Move code based on the prompt
-      const generatedCode = `
-module ${contractName.toLowerCase()}::main {
-    use sui::object::{Self, UID};
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
-    use sui::coin::{Self, Coin};
-    use sui::balance::{Self, Balance};
-    use sui::sui::SUI;
-
-    /// Custom error codes
-    const EInsufficientBalance: u64 = 0;
-    const EInvalidAmount: u64 = 1;
-
-    /// The main storage object for ${contractName}
-    struct ${contractName} has key {
-        id: UID,
-        balance: Balance<SUI>,
-        owner: address
-    }
-
-    /// Create a new instance of ${contractName}
-    public fun initialize(ctx: &mut TxContext) {
-        let ${contractName.toLowerCase()} = ${contractName} {
-            id: object::new(ctx),
-            balance: balance::zero<SUI>(),
-            owner: tx_context::sender(ctx)
-        };
-        // Transfer the object to the sender
-        transfer::share_object(${contractName.toLowerCase()})
-    }
-
-    /// Deposit SUI into the contract
-    public entry fun deposit(
-        self: &mut ${contractName},
-        payment: Coin<SUI>,
-        ctx: &mut TxContext
-    ) {
-        let amount = coin::value(&payment);
-        assert!(amount > 0, EInvalidAmount);
-        
-        let coin_balance = coin::into_balance(payment);
-        balance::join(&mut self.balance, coin_balance);
-    }
-
-    /// Withdraw SUI from the contract
-    public entry fun withdraw(
-        self: &mut ${contractName},
-        amount: u64,
-        ctx: &mut TxContext
-    ) {
-        assert!(balance::value(&self.balance) >= amount, EInsufficientBalance);
-        assert!(tx_context::sender(ctx) == self.owner, 0);
-        
-        let withdrawn_coin = coin::take(&mut self.balance, amount, ctx);
-        transfer::transfer(withdrawn_coin, tx_context::sender(ctx));
-    }
-
-    /// View functions
-    public fun get_balance(self: &${contractName}): u64 {
-        balance::value(&self.balance)
-    }
-
-    public fun get_owner(self: &${contractName}): address {
-        self.owner
-    }
-}`;
+      // Get template based on description
+      const template = getContractTemplate(prompt);
       
-      setGeneratedCode(generatedCode)
+      // Replace placeholder names with actual contract name
+      const generatedCode = template.replace(/nft_minting|nft_marketplace|token_swap/g, contractName.toLowerCase());
+      
+      setGeneratedCode(generatedCode);
+      
+      setPopupMessage({
+        type: 'success',
+        message: 'Code generated successfully!'
+      });
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000);
+
     } catch (error) {
-      console.error('Error generating code:', error)
-      alert('Failed to generate code. Please try again.')
+      console.error('Error generating code:', error);
+      setPopupMessage({
+        type: 'error',
+        message: 'Failed to generate code. Please try again.'
+      });
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCopy = async () => {
     try {
